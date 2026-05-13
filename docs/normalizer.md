@@ -1,6 +1,8 @@
 # Turkish Text Normalizer
 
-The `TurkishNormalizer` class provides a comprehensive solution for normalizing Turkish text by applying all available normalization steps in the correct order.
+The public normalizer API is the `normalize()` function. The old
+`TurkishNormalizer` class was removed; use `normalize(text)` with the default
+pipeline or pass an explicit `converters=[...]` list for a custom pipeline.
 
 ## Features
 
@@ -12,7 +14,7 @@ The `TurkishNormalizer` class provides a comprehensive solution for normalizing 
 - Expands unit abbreviations to their full text (cm → santimetre, kg → kilogram)
 - Handles Turkish character casing and diacritical marks
 - Normalizes time expressions (e.g., "saat 22.00" → "saat yirmi iki")
-- Provides both a class-based API and a simple function-based API
+- Provides a simple function-based API
 - Supports processing both single strings and lists of strings
 - Allows customization of which normalization steps to apply
 - Handles numbers followed by commas in lists and sequences
@@ -44,57 +46,22 @@ print(normalized_texts)
 # ]
 ```
 
-### Using the Class Directly
-
-```python
-from trnorm import TurkishNormalizer
-
-# Create a custom normalizer
-normalizer = TurkishNormalizer(
-    apply_number_conversion=True,
-    apply_ordinal_normalization=True,
-    apply_symbol_conversion=True,
-    apply_multiplication_symbol=True,
-    apply_unit_normalization=True,
-    apply_time_normalization=True,
-    apply_legacy_normalization=False,
-    lowercase=True,
-    remove_hats=True
-)
-
-# Normalize text
-text = "Ürün fiyatı 1.250,75 TL'dir."
-normalized_text = normalizer.normalize(text)
-print(normalized_text)
-# Output: "ürün fiyatı bin iki yüz elli virgül yetmiş beş türk lirası'dir."
-```
-
 ### Customizing Normalization Steps
 
 ```python
 from trnorm import normalize
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.text_utils import turkish_lower
 
-# Only convert numbers to text, keep case and diacritical marks
+# Only convert numbers to text, then Turkish-lowercase
 text = "Âlim insanlar 15 kitap okumuş."
 normalized_text = normalize(
     text,
-    apply_number_conversion=True,
-    apply_ordinal_normalization=False,
-    apply_symbol_conversion=False,
-    apply_multiplication_symbol=False,
-    apply_unit_normalization=False,
-    apply_time_normalization=False,
-    lowercase=False,
-    remove_hats=False
+    converters=[convert_numbers_to_words_wrapper, turkish_lower],
 )
 print(normalized_text)
-# Output: "Âlim insanlar on beş kitap okumuş."
+# Output: "âlim insanlar on beş kitap okumuş."
 
-# Apply legacy normalization (more aggressive, removes punctuation)
-text = "Bugün 3x4 metre halı aldım."
-normalized_text = normalize(text, apply_legacy_normalization=True)
-print(normalized_text)
-# Output: "bugün üç çarpı dört metre halı aldım"
 ```
 
 ### Handling Dimensions and Multiplication Symbols
@@ -132,9 +99,11 @@ normalized_text = normalize(text)
 print(normalized_text)
 # Output: "odanın boyutları beş metre çarpı dört metre, yüksekliği üç metre."
 
-# Disable unit normalization
+# Use a custom converter list when you need to omit unit normalization
 text = "Sıcaklık 25 °C."
-normalized_text = normalize(text, apply_unit_normalization=False)
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.text_utils import turkish_lower
+normalized_text = normalize(text, converters=[convert_numbers_to_words_wrapper, turkish_lower])
 print(normalized_text)
 # Output: "sıcaklık yirmi beş °c."
 ```
@@ -188,15 +157,15 @@ In Turkish, apostrophes are often used to separate suffixes from proper nouns or
 ```python
 from trnorm import normalize
 
-# Enable apostrophe handling
+# Apostrophe handling is part of the default pipeline
 text = "8'i almadım"
-normalized_text = normalize(text, apply_apostrophe_handling=True)
+normalized_text = normalize(text)
 print(normalized_text)
 # Output: "sekizi almadım"
 
 # More examples
 text = "İstanbul'da yaşıyorum"
-normalized_text = normalize(text, apply_apostrophe_handling=True)
+normalized_text = normalize(text)
 print(normalized_text)
 # Output: "istanbulda yaşıyorum"
 ```
@@ -205,31 +174,25 @@ print(normalized_text)
 
 The normalizer applies the following steps in order:
 
-1. **Preprocess dimensions**: Add spaces between numbers and 'x' in dimension expressions
-2. **Symbol conversion**: Convert symbols (%, $, etc.) to their text representation
-3. **Multiplication symbol replacement**: Replace 'x' with 'çarpı' in dimension expressions
-4. **Time expression normalization**: Convert time expressions (e.g., "saat 22.00") to their text form
-5. **Number to text conversion**: Convert numbers to their text representation
-6. **Ordinal normalization**: Convert ordinal numbers to their text representation
-7. **Unit abbreviation expansion**: Convert unit abbreviations to their full text form
-8. **Character normalization**: Apply lowercase and remove circumflex (hat) from Turkish characters
-9. **Apostrophe handling**: Remove apostrophes in Turkish suffixes
-10. **Legacy normalization**: Apply more aggressive normalization (if enabled)
+1. **Time expression normalization**
+2. **Alphanumeric normalization**
+3. **Ordinal normalization**
+4. **Symbol conversion**
+5. **Number to text conversion**
+6. **Context-aware suffix merge**
+7. **Apostrophe removal**
+8. **Hat removal**
+9. **Dimension preprocessing**
+10. **Dimension normalization**
+11. **Unit abbreviation expansion**
+12. **Turkish lowercasing**
+13. **Final hat removal**
+14. **Punctuation removal**
 
-## Configuration Options
+## Custom Pipelines
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `apply_number_conversion` | bool | True | Whether to convert numbers to their text representation |
-| `apply_ordinal_normalization` | bool | True | Whether to normalize ordinals |
-| `apply_symbol_conversion` | bool | True | Whether to convert symbols to their text representation |
-| `apply_multiplication_symbol` | bool | True | Whether to replace multiplication symbol 'x' with 'çarpı' |
-| `apply_unit_normalization` | bool | True | Whether to expand unit abbreviations to full text |
-| `apply_time_normalization` | bool | True | Whether to normalize time expressions |
-| `apply_apostrophe_handling` | bool | False | Whether to remove apostrophes in Turkish suffixes |
-| `apply_legacy_normalization` | bool | False | Whether to apply legacy normalization (more aggressive) |
-| `lowercase` | bool | True | Whether to convert text to lowercase |
-| `remove_hats` | bool | True | Whether to remove circumflex (hat) from Turkish characters |
+`normalize()` accepts `converters=[...]` for custom behavior. Boolean keyword flags from
+the removed `TurkishNormalizer` API are no longer supported.
 
 ## Time Normalization
 

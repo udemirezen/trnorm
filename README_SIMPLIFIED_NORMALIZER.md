@@ -97,7 +97,9 @@ normalize(text, apply_legacy_normalization=True, apply_apostrophe_handling=True)
 You should now use the transformer-based approach:
 
 ```python
-normalize(text, transformers=["legacy_normalize"])
+from trnorm import transform
+
+transform(text, transformers=["legacy_normalize"])
 ```
 
 The available transformers correspond to the previous optional parameters:

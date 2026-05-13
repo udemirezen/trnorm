@@ -1,8 +1,4 @@
-"""
-Example usage of the TurkishNormalizer class.
-
-This script demonstrates how to use the TurkishNormalizer class to normalize Turkish text.
-"""
+"""Example usage of the public normalize() function."""
 
 import sys
 import os
@@ -10,7 +6,9 @@ import os
 # Add the parent directory to the path to import the trnorm package
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from trnorm import normalize, TurkishNormalizer
+from trnorm import normalize
+from trnorm.num_to_text import convert_numbers_to_words_wrapper
+from trnorm.text_utils import turkish_lower
 
 # Example texts with various normalization needs
 example_texts = [
@@ -64,19 +62,11 @@ for i, text in enumerate(example_texts, 1):
 
 print("\n" + "-" * 50 + "\n")
 
-# Using a custom normalizer (no lowercase, no hat removal)
-print("Using custom normalizer (no lowercase, no hat removal):")
-custom_normalizer = TurkishNormalizer(lowercase=False, remove_hats=False)
+# Using a custom converter pipeline
+print("Using custom converter pipeline (numbers + Turkish lowercase):")
+custom_converters = [convert_numbers_to_words_wrapper, turkish_lower]
 for i, text in enumerate(example_texts, 1):
-    normalized = custom_normalizer.normalize(text)
-    print(f"{i}. {normalized}")
-
-print("\n" + "-" * 50 + "\n")
-
-# Using the convenience function with custom parameters
-print("Using convenience function with custom parameters (legacy normalization):")
-for i, text in enumerate(example_texts, 1):
-    normalized = normalize(text, apply_legacy_normalization=True)
+    normalized = normalize(text, converters=custom_converters)
     print(f"{i}. {normalized}")
 
 print("\n" + "-" * 50 + "\n")
@@ -90,16 +80,8 @@ for i, normalized in enumerate(batch_normalized, 1):
 # Example of selective normalization
 print("\n" + "-" * 50 + "\n")
 print("Selective normalization (only numbers to text):")
-numbers_only = TurkishNormalizer(
-    apply_number_conversion=True,
-    apply_ordinal_normalization=False,
-    apply_symbol_conversion=False,
-    apply_multiplication_symbol=False,
-    lowercase=False,
-    remove_hats=False
-)
 for i, text in enumerate(example_texts, 1):
-    normalized = numbers_only.normalize(text)
+    normalized = normalize(text, converters=[convert_numbers_to_words_wrapper])
     print(f"{i}. {normalized}")
 
 # Showcase dimension handling
@@ -126,7 +108,10 @@ for i, text in enumerate(unit_examples[:4], 1):
     with_units = normalize(text)
     
     # Without unit normalization
-    without_units = normalize(text, apply_unit_normalization=False)
+    without_units = normalize(
+        text,
+        converters=[convert_numbers_to_words_wrapper, turkish_lower],
+    )
     
     print(f"{i}. Original: {text}")
     print(f"   With unit norm: {with_units}")

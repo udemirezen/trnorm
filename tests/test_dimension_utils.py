@@ -109,6 +109,10 @@ class TestDimensionUtils(unittest.TestCase):
              "Ağırlığı 5 kilogram. ve uzunluğu 10 metre."),
             ("Ağırlığı 5kg. ve uzunluğu 10m.", 
              "Ağırlığı 5 kilogram. ve uzunluğu 10 metre."),
+
+            # Speed units should preserve their dimensional meaning
+            ("Hızı 10 km/h.", "Hızı 10 kilometre/saat."),
+            ("Hızı 10 km/s.", "Hızı 10 kilometre/saniye."),
             
             # Mixed with dimensions
             ("Oda 2 çarpı 3 m boyutlarındadır.", "Oda 2 çarpı 3 metre boyutlarındadır."),

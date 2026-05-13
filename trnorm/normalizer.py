@@ -6,6 +6,7 @@ to Turkish text in sequence.
 """
 
 from typing import List, Union, Callable, Optional, Any, Tuple
+import inspect
 
 # Import all the functions needed for the default pipeline
 from .dimension_utils import preprocess_dimensions, normalize_dimensions
@@ -101,11 +102,16 @@ def normalize(text: Union[str, List[str]], converters: Optional[List[ConversionF
     # Apply converters in sequence
     result = text
     for converter in converters:
+        signature = inspect.signature(converter)
         try:
-            # Try to pass the context_text parameter if the converter supports it
-            result = converter(result, context_text)
+            signature.bind(result, context_text)
+            accepts_context = True
         except TypeError:
-            # If the converter doesn't accept a second parameter, call it with just the text
+            accepts_context = False
+
+        if accepts_context:
+            result = converter(result, context_text)
+        else:
             result = converter(result)
     
     return result

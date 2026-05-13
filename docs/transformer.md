@@ -155,18 +155,19 @@ for name, description in transformers.items():
     print(f"{name}: {description}")
 ```
 
-## Comparison with TurkishNormalizer
+## Comparison with `normalize()`
 
-The transformer-based approach provides more flexibility than the `TurkishNormalizer` class:
+The transformer-based approach provides more explicit control than the default
+`normalize()` pipeline:
 
 1. **Customizable Order**: With `TransformerPipeline`, you can specify the exact order of transformations.
 2. **Selective Application**: You can choose exactly which transformers to apply.
 3. **Extensibility**: You can easily create and register custom transformers.
 4. **Clarity**: The pipeline approach makes it clear which transformations are being applied.
 
-However, `TurkishNormalizer` provides a simpler interface for common use cases. Choose the approach that best fits your needs:
+Choose the approach that best fits your needs:
 
-- Use `TurkishNormalizer` for simple, predefined normalization with boolean flags.
+- Use `normalize()` for the current default normalization pipeline.
 - Use `TransformerPipeline` for complete control over the normalization process.
 
 ## Integration with Benchmarking Code

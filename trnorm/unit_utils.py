@@ -53,7 +53,7 @@ unit_translations = {
     "k": "kelvin",
     "mph": "mil/saat",
     "km/h": "kilometre/saat",
-    "km/s": "kilometre/saat",
+    "km/s": "kilometre/saniye",
     "km": "kilometre",
     "knot": "düğüm",
     "pa": "paskal",

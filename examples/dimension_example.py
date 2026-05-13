@@ -86,7 +86,20 @@ examples_without_unit_norm = [
 ]
 
 for example in examples_without_unit_norm:
-    normalized = normalize(example, apply_unit_normalization=False)
+    # Custom converter list omits normalize_units from the default pipeline.
+    from trnorm.num_to_text import convert_numbers_to_words_wrapper
+    from trnorm.text_utils import turkish_lower
+    from trnorm.dimension_utils import preprocess_dimensions, normalize_dimensions
+
+    normalized = normalize(
+        example,
+        converters=[
+            preprocess_dimensions,
+            normalize_dimensions,
+            convert_numbers_to_words_wrapper,
+            turkish_lower,
+        ],
+    )
     print(f"Original: {example}")
     print(f"Normalized (no unit norm): {normalized}")
     print("-" * 50)
